@@ -4,6 +4,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 
@@ -13,8 +14,9 @@ public class TileBoard {
     private StackPane pane;
     private InfoCenter infoCenter;
     private Tile[][] tiles = new Tile[3][3];
+    private Line winningLine;
 
-    private char playerTurn ='X';
+    private char playerTurn = 'X';
     private boolean isEndOfGame = false;
 
     public TileBoard(InfoCenter infoCenter){
@@ -25,7 +27,11 @@ public class TileBoard {
         pane.setTranslateY((UIConstants.TILE_BOARD_HEIGHT / 2) + UIConstants.INFO_CENTER_HEIGHT);
 
         addAllTiels();
+
+        winningLine = new Line();
+        pane.getChildren().add(winningLine);
     }
+
 
     private void addAllTiels() {
         for (int row = 0; row < 3; row++){
@@ -39,13 +45,24 @@ public class TileBoard {
         }
     }
 
+    public void startNewGame() {
+        isEndOfGame = false;
+        playerTurn = 'X';
+        for (int row = 0; row < 3; row++){
+            for (int col = 0; col < 3; col++) {
+                tiles [row][col].setValue("");
+            }
+        }
+        winningLine.setVisible(false);
+    }
+
     public void changePlayerTurn(){
-        if (playerTurn =='x'){
+        if (playerTurn == 'X' ){
             playerTurn = 'O';
         }else {
             playerTurn = 'X';
         }
-        infoCenter.updateMeassage("Player"+ playerTurn + "'X turn");
+        infoCenter.updateMeassage("Player " + playerTurn + "'s turn");
     }
 
     public String getPlayerTurn(){
@@ -69,7 +86,7 @@ public class TileBoard {
                     tiles[row][0].getValue().equals(tiles[row][2].getValue())&&
                         !tiles[row][0].getValue().isEmpty()){
                 String Winner = tiles[row] [0].getValue();
-                endGame(Winner);
+                endGame(Winner, new WinningTiles(tiles[row][0], tiles[row][1],tiles[row][2]));
                 return;
             }
         }
@@ -82,7 +99,7 @@ public class TileBoard {
                         tiles[0][col].getValue().equals(tiles[2][col].getValue())&&
                         !tiles[0][col].getValue().isEmpty()){
                     String Winner = tiles[0] [col].getValue();
-                    endGame(Winner);
+                    endGame(Winner, new WinningTiles(tiles[0][col], tiles[1][col],tiles[2][col]));
                     return;
                 }
             }
@@ -93,7 +110,7 @@ public class TileBoard {
             if (tiles[0][0].getValue().equals(tiles[1][1].getValue())
                     && tiles[0][0].getValue().equals(tiles[2][2].getValue()) && !tiles[0][0].getValue().isEmpty()){
                 String Winner = tiles[0] [0].getValue();
-                endGame(Winner);
+                endGame(Winner,new WinningTiles(tiles[0][0], tiles[1][1],tiles[2][2]));
                 return;
             }
         }
@@ -101,22 +118,57 @@ public class TileBoard {
 
     private void checkTopRightToBottomLeftForWinner() {
         if (!isEndOfGame) {
-            if (tiles[0][0].getValue().equals(tiles[1][1].getValue())
-                    && tiles[0][0].getValue().equals(tiles[2][2].getValue()) && !tiles[0][0].getValue().isEmpty()){
-                String Winner = tiles[0] [0].getValue();
-                endGame(Winner);
+            if (tiles[0][2].getValue().equals(tiles[1][1].getValue())
+                    && tiles[0][2].getValue().equals(tiles[2][0].getValue()) && !tiles[0][2].getValue().isEmpty()){
+                String Winner = tiles[0] [2].getValue();
+                endGame(Winner, new WinningTiles(tiles[0][2], tiles[1][1], tiles[2][0]));
                 return;
             }
         }
     }
 
     private void checkForStalemate() {
-
+        if (!isEndOfGame) {
+            for (int row = 0; row < 3; row++) {
+                for (int col = 0; col < 3; col++) {
+                    if (tiles[row] [col].getValue().isEmpty()) {
+                        return;
+                    }
+                }
+            }
+            isEndOfGame = true;
+            infoCenter.updateMeassage( "Stalemate.." );
+            infoCenter.showStartButton();
+        }
     }
 
-    private void endGame(String Winner) {
+    private void endGame(String Winner,  WinningTiles winningTiles) {
         isEndOfGame = true;
-        System.out.println("Player" + Winner + "has won");
+        draWinningLine(winningTiles);
+        infoCenter.updateMeassage( "Player" + Winner + "Wins" );
+        infoCenter.showStartButton();
+    }
+
+    private void draWinningLine(WinningTiles winningTiles) {
+        winningLine.setStartX(winningTiles.start.getStackPane().getTranslateX());
+        winningLine.setStartY(winningTiles.start.getStackPane().getTranslateY());
+        winningLine.setEndX(winningTiles.end.getStackPane().getTranslateX());
+        winningLine.setEndY(winningTiles.end.getStackPane().getTranslateY());
+        winningLine.setTranslateX(winningTiles.middle.getStackPane().getTranslateX());
+        winningLine.setTranslateY(winningTiles.middle.getStackPane().getTranslateY());
+        winningLine.setVisible(true);
+    }
+
+    private class WinningTiles {
+        Tile start;
+        Tile middle;
+        Tile end;
+        public WinningTiles(Tile start,Tile middle,Tile end) {
+            this.start = start;
+            this.middle = middle;
+            this.end = end;
+
+        }
     }
 
     private class Tile{

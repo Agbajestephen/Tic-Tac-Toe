@@ -14,13 +14,13 @@ import java.io.IOException;
 public class HelloApplication extends Application {
 
     private InfoCenter infoCenter;
+    private TileBoard tileBoard;
     @Override
     public void start(Stage stage) throws IOException {
         try{
             BorderPane root = new BorderPane();
             Scene scene = new Scene(root,UIConstants.APP_WIDTH,UIConstants.APP_HEIGHT);
             initLayout(root);
-//            scene.getStylesheets().add(getClass().getResource("applicaton.css").toExternalForm());
             stage.setScene(scene);
             stage.show();
         } catch (Exception e) {
@@ -46,12 +46,14 @@ public class HelloApplication extends Application {
             public void handle(ActionEvent e){
                 infoCenter.hideStartButton();
                 infoCenter.updateMeassage("Player X's Turn");
-                System.out.println("Game is Starting!!!!");
+                tileBoard.startNewGame();
             }
         };
     }
 
     private void initTileBoard(BorderPane root) {
+        tileBoard = new TileBoard(infoCenter);
+        root.getChildren().add(tileBoard.getStackPane());
     }
 
 
